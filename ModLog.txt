@@ -1,0 +1,97 @@
+2020 Mar 10
+	Add code in "nus_data_handler" function to check the compare the excute from Uart command
+
+	Migrate Functions and Variables from Calendars Examples to this project
+	Change RTC0 > RTC2
+
+	Test with the UART through BLE: send "hello" and the DK will return the time
+
+	Nxt step:
+		Try to use app_timer module > Read the tutorial
+			https://devzone.nordicsemi.com/nordic/short-range-guides/b/software-development-kit/posts/application-timer-tutorial
+			Read more abt scheduler > OK
+			Try to use app_timer module to update the calendar > OK: 2020 Mar 13
+				Under stand how they write to the register ( by NRF_RTCx->CC[] ) to set the compare value
+				They use Atomic FiFo: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v14.2.0%2Flib_atfifo.html
+				The CC value to set should be N (not N-1) because compare will happen when counter: N-1 > N
+
+		
+		Set up RTC setting to:
+			Setting the time
+				 Ok to set time (hh:mm:ss) through UART
+			Don't go to sleep mode or sleep with Timer still run or wake-up when need
+				> Program to keep the time when power-off and run smoothly in running mode
+					> In the main, they're using idle_state_handle () -> sd_app_evt_wait() to put in to system on low power mode
+					> Go to system off mode by: sleep_mode_enter
+						> Checking how the code will run to this mode
+						It will check status of BLE ADV: if it's : BLE_ADV_EVT_IDLE
+							        case BLE_ADV_EVT_IDLE:
+            							sleep_mode_enter();
+						> Stopped it - it still going into sleep and reset the time
+								Maybe BLE go to sleep, so cannot connect > solved
+							We should change:
+								in "advertising_init()" function:
+									init.advdata.flags    = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE
+								APP_ADV_DURATION = 0;
+								Disable sleep_mode_enter(); in on_adv_evt() and bsp_event_handler()
+
+			Set the Alarm
+				> Program the event to check alarm > Read more abt Scheduler > Follow tutorial
+				> Put the check alarm into Scheduler > Created the Thread mode for RTC handler >
+									> 26Mar20 Can do comparision in thread mode
+
+				> Creat struct data to check the alarm : OK
+					> Get time on the phone
+					> Set alarm data on the phone : 288 slots
+						> Simulate data to test
+						> Save data to FDS
+							When migrate FSD libraries:
+								Add all fds.c and nrf fstorage libraries
+								In "sdk_config.h" need to enable:
+									FDS_ENABLED
+									NRF_FSTORAGE_ENABLED
+							15 Apr 2020
+								Can save alarm array to record flash, but only with limited size (~24)
+								> Try to check error, if take long time, will continue to run with LED
+							16 Apr 2020
+								> Solve the error, have to use garbage collection before going to update/write
+									Else it will cause FDS_ERR_NO_SPACE_IN_FLASH after some operations
+							17 Apr 2020
+								> Understood abt static function, volatite variable
+								> Alway update the data
+							
+						> Set the stamp through BLE : OK
+					> Trial run to turn on the LED
+						> Ok, easy
+				> Find the way to keep the time: power reset, and sleep, reduce the power , try to run with battery
+					> Battery is connected to the power net.
+					> Reduce current
+						> Read the docs how to reduce the power consumtion
+						> Try to turn-off the led
+						> Sleep the NUS > not yet > maybe have to use adv_stop
+							OK > Set the duration
+								> On bsp_event_handler() need to start the BLE again
+						> Keep the time when reset occur
+						> Measure the current
+							> Turn off RTC init > save abt 5mA
+							> Add turn-off iddle state:
+									err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+    									APP_ERROR_CHECK(err_code);
+							> Current now is 2.5mA, and few uA only when system-off
+								Need to find the way to turn-off almost the module
+							04 May 2020: > Almost OK, current now only < 20uA if we use:app_uart_close();
+				> Make working code:
+					> Run with continuous RTC - Battery and can On/Off LED by the alarm
+						> Add uart_init() in Button0 event and it work
+						> Need to close RTT because it draw a current ~3mA
+					> Fix the bug: FDS reading is hang-on when just clear the flash
+
+		Test on external board
+			
+End target:
+	Independent module can:
+		* On/Off relay by RTC setting
+		* Comuicate through BLE with NUS
+		* Can keep time when under battery mode with low power consumtion
+
+
