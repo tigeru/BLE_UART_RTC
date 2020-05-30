@@ -885,14 +885,6 @@ int main(void)
     bool erase_bonds;
 	
 	// Add Duc's code: RTC Calendar init
-
-//    NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
-//    NRF_CLOCK->TASKS_HFCLKSTART = 1;
-//    while(NRF_CLOCK->EVENTS_HFCLKSTARTED == 0);
-//	
-//		nrf_cal_init();
-//    nrf_cal_set_callback(calendar_updated, 4);
-//		nrf_cal_set_time(2020, 3, 10, 15, 15, 00);
 	
 	// End Duc's code
 
