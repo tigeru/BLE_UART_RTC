@@ -85,6 +85,10 @@
 						> Add uart_init() in Button0 event and it work
 						> Need to close RTT because it draw a current ~3mA
 					> Fix the bug: FDS reading is hang-on when just clear the flash
+						> Fixed, when excute: d_read_data() > fds_record_find() : there should be error "NOT FOUND"
+							in the first time, when flash is cleared
+						> Just need to excute this function with-out while loop.
+
 
 		Test on external board
 			

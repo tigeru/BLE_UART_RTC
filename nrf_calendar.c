@@ -53,7 +53,7 @@ void d_export_data(void)
 				
 					d_tm_return_time = *localtime(&(d_stamp_data[i].d_time));
 				//NRF_LOG_INFO("DT %d is: %02d:%02d M:%d",i, d_tm_return_time.tm_hour, d_tm_return_time.tm_min, d_stamp_data[i].d_mode);
-				//printf("DT %d is: %02d:%02d M:%d",i, d_tm_return_time.tm_hour, d_tm_return_time.tm_min, d_stamp_data[i].d_mode);
+				printf("DT %d is: %02d:%02d M:%d",i, d_tm_return_time.tm_hour, d_tm_return_time.tm_min, d_stamp_data[i].d_mode);
 			}
 }
 /* Function to compare 2 time value on HH:MM:SS only
@@ -95,7 +95,6 @@ ret_code_t d_write_data(d_stamp_time_t *d_data_pointer)
 	fds_find_token_t   	d_ftok = {0};
 	// Set up record.
 	record.file_id           = D_FILE_ID;
-	//record.key               = D_DATA_KEY_OFFSET + index;
 	record.key               = D_DATA_KEY_OFFSET;
 	
 	//record.data.p_data       = d_data_pointer + index;
@@ -104,47 +103,38 @@ ret_code_t d_write_data(d_stamp_time_t *d_data_pointer)
 	//record.data.length_words = (sizeof(d_stamp_time_t) + 3) / sizeof(uint32_t);   /* one word is four bytes. */
 	record.data.length_words = (sizeof(d_fds_time_data) + 3) / sizeof(uint32_t);
 	
-	//uint32_t *d_p_uint32;
-	//d_p_uint32 = (uint32_t *)record.data.p_data;
-	//NRF_LOG_INFO("1st word of record data in hex: 0x%08X",*d_p_uint32);
-	//NRF_LOG_INFO("2nd word of record data in hex: 0x%08X",*(d_p_uint32 + 1) );
-	//NRF_LOG_INFO("Add of record data: 0x%08X",(uint32_t )record.data.p_data);
-	
-	//NRF_LOG_INFO("Start find function");
-	//ret_code_t ret = fds_record_find(D_FILE_ID, D_DATA_KEY_OFFSET + index, &record_desc, &d_ftok);
-	
-		ret_code_t	d_ret = fds_gc();
-		if( d_ret !=NRF_SUCCESS )
-		{
-			NRF_LOG_INFO("There are some error during garbage collection.");
-		}
+	ret_code_t	d_ret = fds_gc();
+	if( d_ret !=NRF_SUCCESS )
+	{
+		NRF_LOG_INFO("There are some error during garbage collection.");
+	}
 		
 	ret_code_t ret = fds_record_find(D_FILE_ID, D_DATA_KEY_OFFSET, &record_desc, &d_ftok);
-	if (ret == NRF_SUCCESS)
-	{						
-			ret = fds_record_update(&record_desc, &record);
-			if (ret == FDS_ERR_NO_SPACE_IN_FLASH)
-				NRF_LOG_INFO("N Sp");
+			if (ret == NRF_SUCCESS)
+			{						
+					ret = fds_record_update(&record_desc, &record);
+					if (ret == FDS_ERR_NO_SPACE_IN_FLASH)
+						NRF_LOG_INFO("No Space");
+						
+					NRF_LOG_INFO("Logger configuration file updated with result:%d", ret);
+					//printf("URET:%d\r\n", ret);
 				
-			NRF_LOG_INFO("Logger configuration file updated with result:%d", ret);
-			//printf("URET:%d\r\n", ret);
-		
-			//wait_for_updating();	
-	}
-	else if (ret == FDS_ERR_NOT_FOUND)
-	{
-			ret = fds_record_write(&record_desc, &record);
-			NRF_LOG_INFO("Logger configuration file written with result:%d", ret);
-		
-			// Wait until completed writing
-			//wait_for_writing();
-	}
-	else
-	{	
-			NRF_LOG_INFO("There are some error.");
-			ret = NRF_ERROR_INTERNAL;
-			NRF_LOG_INFO("Error:%d", ret);
-	}
+					//wait_for_updating();	
+			}
+			else if (ret == FDS_ERR_NOT_FOUND)
+			{
+					ret = fds_record_write(&record_desc, &record);
+					NRF_LOG_INFO("Logger configuration file written with result:%d", ret);
+				
+					// Wait until completed writing
+					//wait_for_writing();
+			}
+			else
+			{	
+					NRF_LOG_INFO("There are some error.");
+					ret = NRF_ERROR_INTERNAL;
+					NRF_LOG_INFO("Error:%d", ret);
+			}
 	
 	//NRF_LOG_INFO("Writing completed.");
 	return ret;
@@ -162,17 +152,10 @@ ret_code_t d_read_data(void)
 	/* It is required to zero the token before first use. */
 	memset(&tok, 0x00, sizeof(fds_find_token_t));
 	
-	uint32_t d_find_count = 0;
-	while (fds_record_find(D_FILE_ID, D_DATA_KEY_OFFSET, &record_desc, &tok) == NRF_SUCCESS)
+	d_ret = fds_record_find(D_FILE_ID, D_DATA_KEY_OFFSET, &record_desc, &tok);
+	
+	if( d_ret ==  NRF_SUCCESS )
 	{
-			d_find_count++;
-			if (d_find_count > 1)
-			{
-				NRF_LOG_INFO("There are more than 1 record found with D_DATA_KEY_OFFSET ");
-				d_ret = NRF_ERROR_INTERNAL;
-				NRF_LOG_INFO("Error:%d", d_ret);
-				break;
-			}
 			
 			d_ret = fds_record_open(&record_desc, &flash_record) ;
 			if (d_ret != NRF_SUCCESS)
@@ -180,23 +163,10 @@ ret_code_t d_read_data(void)
 				NRF_LOG_INFO("There are some error in record open.");
 				d_ret = NRF_ERROR_INTERNAL;
 				NRF_LOG_INFO("Error:%d", d_ret);
-				break;
 			}
 			
 			/* Access the record through the flash_record structure. */
 				memcpy(d_stamp_data, flash_record.p_data, sizeof(d_stamp_data) );
-
-			/* 					Testing read-record data
-						//				uint32_t *d_p_uint32;
-						//				d_p_uint32 = (uint32_t *)flash_record.p_data;
-						//				memcpy(&d_tmp_uint32, flash_record.p_data, sizeof(d_tmp_uint32) );
-						//			
-						//				NRF_LOG_INFO("1st word of frecord data in hex: 0x%08X",*d_p_uint32);
-						//				NRF_LOG_INFO("2nd word of frecord data in hex: 0x%08X",*(d_p_uint32 + 1) );
-						//				NRF_LOG_INFO("Location of record data: 0x%08X",(uint32_t)flash_record.p_data);
-						//				NRF_LOG_INFO("Data of frecord data: 0x%08X",d_tmp_uint32);
-			*/
-			
 			
 			/* Close the record when done. */
 			if (fds_record_close(&record_desc) != NRF_SUCCESS)
@@ -205,9 +175,22 @@ ret_code_t d_read_data(void)
 				NRF_LOG_INFO("There are some error in record close.");
 				d_ret = NRF_ERROR_INTERNAL;
 				NRF_LOG_INFO("Error:%d", d_ret);
-				break;
 			}
 	}
+	
+	else if (d_ret == FDS_ERR_NOT_FOUND)
+	{
+			
+			NRF_LOG_INFO("NOT FOUND error:%d", d_ret);
+	}
+	else
+	{	
+			NRF_LOG_INFO("There are some unknown error.");
+			d_ret = NRF_ERROR_INTERNAL;
+			NRF_LOG_INFO("Error:%d", d_ret);
+	}
+			
+	
 			/*					Testing read-record data
 			//	NRF_LOG_INFO("Data was read in hex: 0x%4X",d_tmp_uint32);
 			//	NRF_LOG_INFO("D Time was read data in hex: 0x%08X",d_stamp_data.d_time);
@@ -215,15 +198,15 @@ ret_code_t d_read_data(void)
 			*/
 	
 	// Print all the records
-	struct tm d_tm_return_time;
-	for(uint32_t i=0; i<= D_MAX_SLOT;i++)
-	{
+//	struct tm d_tm_return_time;
+//	for(uint32_t i=0; i<= D_MAX_SLOT;i++)
+//	{
 
-			if(d_stamp_data[i].d_mode == D_MODE_BLANK ) break;
-		
-			d_tm_return_time = *localtime(&(d_stamp_data[i].d_time));
-		NRF_LOG_INFO("DT %d is: %02d:%02d:%02d M:%d",i, d_tm_return_time.tm_hour, d_tm_return_time.tm_min, d_tm_return_time.tm_sec,d_stamp_data[i].d_mode);
-	}
+//			if(d_stamp_data[i].d_mode == D_MODE_BLANK ) break;
+//		
+//			d_tm_return_time = *localtime(&(d_stamp_data[i].d_time));
+//		NRF_LOG_INFO("DT %d is: %02d:%02d:%02d M:%d",i, d_tm_return_time.tm_hour, d_tm_return_time.tm_min, d_tm_return_time.tm_sec,d_stamp_data[i].d_mode);
+//	}
 	return d_ret;
 }
 

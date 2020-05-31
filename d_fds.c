@@ -186,69 +186,6 @@ ret_code_t d_fds_init(void)
 
 		NRF_LOG_INFO("FDS init successfully.");
 			
-//					static uint32_t   const d_deadbeef = 0xDAADBEEF;
-//					fds_record_t        record;
-//					fds_record_desc_t   record_desc ={0};
-//					fds_find_token_t   	d_ftok = {0};
-//					// Set up record.
-//					record.file_id           = D_FILE_ID;
-//					record.key               = D_RECORD_KEY_OFFSET;
-//					record.data.p_data       = &d_deadbeef;
-//					record.data.length_words = 1;   /* one word is four bytes. */
-//					rc = fds_record_write(&record_desc, &record);
-//					if (rc != NRF_SUCCESS)
-//					{
-//							/* Handle error. */
-//					}
-					
-//					NRF_LOG_INFO("Start find function");
-//					ret_code_t ret = fds_record_find(D_FILE_ID, D_RECORD_KEY_OFFSET, &record_desc, &d_ftok);
-//					
-//					if (ret == NRF_SUCCESS)
-//					{						
-//							ret = fds_record_update(&record_desc, &record);
-//							NRF_LOG_INFO("Logger configuration file updated with result:%d", ret);
-//						
-//					}
-//					else if (ret == FDS_ERR_NOT_FOUND)
-//					{
-//							ret = fds_record_write(&record_desc, &record);
-//							NRF_LOG_INFO("Logger configuration file written with result:%d", ret);
-//						
-//							wait_for_writing();
-//					}
-//					else
-//					{	
-//							NRF_LOG_INFO("There are some error.");
-//							ret = NRF_ERROR_INTERNAL;
-//							NRF_LOG_INFO("Error:%d", ret);
-//					}
-//		
-//					
-//					fds_record_desc_t   d_desc = {0};
-//					fds_flash_record_t  flash_record;
-//					fds_find_token_t    ftok;
-//					/* It is required to zero the token before first use. */
-//					memset(&ftok, 0x00, sizeof(fds_find_token_t));
-//					
-//				//	rc = fds_record_find(FILE_ID, RECORD_KEY_1, &d_desc, &ftok);
-//					while (fds_record_find(D_FILE_ID, D_RECORD_KEY_OFFSET, &d_desc, &ftok) == NRF_SUCCESS)
-//					{
-//								if (fds_record_open(&d_desc, &flash_record) != NRF_SUCCESS)
-//								{
-//										/* Handle error. */
-//								}
-//								/* Access the record through the flash_record structure. */
-//								uint32_t d_tmp_uint32;
-//								memcpy(&d_tmp_uint32, flash_record.p_data, sizeof(d_tmp_uint32) );
-//								printf("Data read in init: %4x \r\n", d_tmp_uint32);
-//								/* Close the record when done. */
-//								if (fds_record_close(&d_desc) != NRF_SUCCESS)
-//								{
-//										/* Handle error. */
-//								}
-//					}
-
 		return rc;
 	
 }

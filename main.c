@@ -902,8 +902,11 @@ int main(void)
 		{
 		}
 		
-//		/*Coppy the alarm data from flash memory*/
-//		APP_ERROR_CHECK(d_read_data());
+		/*Coppy the alarm data from flash memory*/
+		// Some time, data will be blank, and it will call cannot not found error
+		// In 1st flash
+		d_read_data();
+		
 //		
 	/*
 		Initialize the timer from app_timer library to creat 1 second tick handler 
